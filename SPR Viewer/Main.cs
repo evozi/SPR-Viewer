@@ -108,6 +108,15 @@ namespace SPR_Viewer
 
                     while (num > 0)
                     {
+                        if(fileType == 1)
+                        {
+                            reader.ReadInt32();
+                            header.ItemIDCount = reader.ReadInt32();
+                            for (int x = 0; x < header.ItemIDCount; x++)
+                            {
+                                header.ItemID = reader.ReadInt32();
+                            }
+                        }
                         header.FirstRead = reader.ReadBytes(ReadSizeType);
                         header.SecondRead = reader.ReadBytes(ReadSizeType);
                         header.ImgCount = reader.ReadInt32();
@@ -187,7 +196,7 @@ namespace SPR_Viewer
                 index++;
             }
 
-            var encoding = new UTF8Encoding();
+            var encoding = Encoding.GetEncoding("euc-kr");
             var str = encoding.GetString(header.FirstRead, 0, index);
             header.SprFileName = str;
             str = "";
@@ -402,6 +411,20 @@ namespace SPR_Viewer
         private void linkLabelGithub_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://github.com/evozi/SPR-Viewer");
+        }
+
+        private void buttonOpenCsp_Click(object sender, EventArgs e)
+        {
+            this.treeView1.Nodes["mainNode"].Nodes.Clear();
+            this.SprList.Clear();
+            this.openFileDialog1.Filter = "Spr File .csp|*.csp";
+            this.openFileDialog1.FileName = "";
+            this.openFileDialog1.ShowDialog();
+            if (this.openFileDialog1.FileName != "")
+            {
+                string fileName = this.openFileDialog1.FileName;
+                this.ParseSprFile(fileName, 1);
+            }
         }
     }
 }
