@@ -73,6 +73,7 @@
             this.linkLabelWebsite = new System.Windows.Forms.LinkLabel();
             this.linkLabelGithub = new System.Windows.Forms.LinkLabel();
             this.labelAbout = new System.Windows.Forms.Label();
+            this.buttonOpenCsp = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.groupBoxSave.SuspendLayout();
             this.groupBoxOpen.SuspendLayout();
@@ -81,7 +82,7 @@
             // checkBoxMGO
             // 
             this.checkBoxMGO.AutoSize = true;
-            this.checkBoxMGO.Location = new System.Drawing.Point(6, 48);
+            this.checkBoxMGO.Location = new System.Drawing.Point(0, 96);
             this.checkBoxMGO.Name = "checkBoxMGO";
             this.checkBoxMGO.Size = new System.Drawing.Size(123, 17);
             this.checkBoxMGO.TabIndex = 76;
@@ -397,6 +398,7 @@
             // 
             // groupBoxOpen
             // 
+            this.groupBoxOpen.Controls.Add(this.buttonOpenCsp);
             this.groupBoxOpen.Controls.Add(this.buttonOpenSpr);
             this.groupBoxOpen.Controls.Add(this.checkBoxMGO);
             this.groupBoxOpen.Location = new System.Drawing.Point(12, 442);
@@ -457,6 +459,16 @@
             this.labelAbout.Size = new System.Drawing.Size(177, 13);
             this.labelAbout.TabIndex = 95;
             this.labelAbout.Text = "SPR Viewer is made by Nati && Evozi";
+            // 
+            // buttonOpenCsp
+            // 
+            this.buttonOpenCsp.Location = new System.Drawing.Point(6, 51);
+            this.buttonOpenCsp.Name = "buttonOpenCsp";
+            this.buttonOpenCsp.Size = new System.Drawing.Size(188, 23);
+            this.buttonOpenCsp.TabIndex = 77;
+            this.buttonOpenCsp.Text = "Open CSP";
+            this.buttonOpenCsp.UseVisualStyleBackColor = true;
+            this.buttonOpenCsp.Click += new System.EventHandler(this.buttonOpenCsp_Click);
             // 
             // Main
             // 
@@ -557,6 +569,7 @@
         private System.Windows.Forms.LinkLabel linkLabelWebsite;
         private System.Windows.Forms.LinkLabel linkLabelGithub;
         private System.Windows.Forms.Label labelAbout;
+        private System.Windows.Forms.Button buttonOpenCsp;
     }
 }
 

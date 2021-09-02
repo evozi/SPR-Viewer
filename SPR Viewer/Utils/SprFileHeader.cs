@@ -7,5 +7,7 @@
         public int ImgCount;
         public string SprDescrption;
         public string SprFileName;
+        public int ItemIDCount;
+        public int ItemID;
     }
 }
