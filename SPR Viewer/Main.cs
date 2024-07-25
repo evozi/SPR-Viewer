@@ -108,6 +108,12 @@ namespace SPR_Viewer
                         for (var j = header.ImgCount; j > 0; j--)
                         {
                             var item = new SprFileData();
+
+                            if (fileType == FILE_TYPE_CSP)
+                            {
+                                item.ItemID = header.ItemID;
+                            }
+
                             item.var1 = reader.ReadInt32();
                             item.LoopCount1 = reader.ReadInt32();
                             if (item.LoopCount1 > 0)
@@ -199,7 +205,12 @@ namespace SPR_Viewer
             for (var i = 0; i < SprList.Count; i++)
             {
                 var num10 = i + 1;
-                treeView1.Nodes["mainNode"].Nodes.Add(i.ToString(), "Image : " + num10);
+
+                if (fileType == FILE_TYPE_CSP)
+                    treeView1.Nodes["mainNode"].Nodes.Add(i.ToString(), "" + num10 + " - ID: " + SprList[i].ItemID);
+                else 
+                    treeView1.Nodes["mainNode"].Nodes.Add(i.ToString(), "Image : " + num10);
+
                 treeView1.Nodes["mainNode"].Nodes[i.ToString()].Tag = "1";
             }
         }
@@ -371,10 +382,10 @@ namespace SPR_Viewer
                         Bitmap bitmapPreview = CreateBitmap((short)data.Width, (short)data.Height, data.ImageData, ColorPixel[data.ColorType]);
 
                         if (radioButtonPng.Checked)
-                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + treeView1.SelectedNode.Name +
+                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + data.ItemID +
                                 ".png", ImageFormat.Png);
                         else
-                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + treeView1.SelectedNode.Name +
+                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + data.ItemID +
                                 ".bmp", ImageFormat.Bmp);
 
                         bitmapPreview.Dispose();

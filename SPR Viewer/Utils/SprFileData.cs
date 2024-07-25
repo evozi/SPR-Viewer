@@ -19,5 +19,6 @@ namespace SPR_Viewer.Utils
         public int var1;
         public byte var4;
         public int Width;
+        public int ItemID;
     }
 }
