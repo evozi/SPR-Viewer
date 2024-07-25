@@ -8,9 +8,10 @@
     <OutputType>WinExe</OutputType>
     <RootNamespace>SPR_Viewer</RootNamespace>
     <AssemblyName>SPR Viewer</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -25,7 +26,6 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -81,15 +81,6 @@
     <ApplicationIcon>favicon-32x32.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.DirectX">
-      <Name>Microsoft.DirectX</Name>
-    </Reference>
-    <Reference Include="Microsoft.DirectX.Direct3D">
-      <Name>Microsoft.DirectX.Direct3D</Name>
-    </Reference>
-    <Reference Include="Microsoft.DirectX.Direct3DX">
-      <Name>Microsoft.DirectX.Direct3DX</Name>
-    </Reference>
     <Reference Include="System">
       <Name>System</Name>
     </Reference>
