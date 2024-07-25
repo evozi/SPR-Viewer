@@ -7,8 +7,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
-using Microsoft.DirectX;
-using Microsoft.DirectX.Direct3D;
 using SPR_Viewer.Utils;
 
 namespace SPR_Viewer
@@ -17,8 +15,6 @@ namespace SPR_Viewer
     {
         private readonly Dictionary<int, Format> ColorFomat3D3 = new Dictionary<int, Format>();
         private readonly Dictionary<int, PixelFormat> ColorPixel = new Dictionary<int, PixelFormat>();
-
-        private Device m_Device;
 
         public int ReadSizeType = 0x80;
         private string Sname = string.Empty;
@@ -43,8 +39,12 @@ namespace SPR_Viewer
             label9.Text = "Width";
             label10.Text = "Height";
             label11.Text = "NumPixels";
+
+            // Add ColorPixel dictionary
             ColorPixel.Add(3, PixelFormat.Format16bppArgb1555);
             ColorPixel.Add(4, PixelFormat.Format32bppArgb);
+
+            // Add ColorFomat3D3 dictionary
             ColorFomat3D3.Add(3, Format.A1R5G5B5);
             ColorFomat3D3.Add(4, Format.A8R8G8B8);
             ColorFomat3D3.Add(5, Format.A4R4G4B4);
@@ -54,39 +54,20 @@ namespace SPR_Viewer
             ColorFomat3D3.Add(9, Format.Dxt4);
         }
 
-        private void CreateBitmap(int w, int h, byte[] data, PixelFormat Format)
+        private Bitmap CreateBitmap(int w, int h, byte[] data, PixelFormat pixelFormat)
         {
-            var bitmap = new Bitmap(w, h, Format);
-            var bitmapdata = bitmap.LockBits(new Rectangle(new Point(), bitmap.Size), ImageLockMode.ReadOnly, Format);
+            var bitmap = new Bitmap(w, h, pixelFormat);
+            var bitmapdata = bitmap.LockBits(new Rectangle(new Point(), bitmap.Size), ImageLockMode.ReadOnly, pixelFormat);
             var length = bitmapdata.Stride * bitmap.Height;
             Marshal.Copy(data, 0, bitmapdata.Scan0, length);
             bitmap.UnlockBits(bitmapdata);
-            pictureBox1.Image = bitmap;
-        }
 
-        private void InitializeDevice()
-        {
-            var parameters = new PresentParameters();
-            parameters.Windowed = true;
-            parameters.SwapEffect = SwapEffect.Discard;
-            m_Device = new Device(0, DeviceType.Hardware, pictureBox1.Handle, CreateFlags.SoftwareVertexProcessing,
-                parameters);
-            m_Device.RenderState.CullMode = Cull.None;
-            m_Device.RenderState.Lighting = false;
-            m_Device.Transform.Projection = Matrix.PerspectiveFovLH(0.7853982f, 1.333333f, 1f, 1000f);
-            m_Device.Transform.View = Matrix.LookAtLH(new Vector3(0f, 10f, -20f), new Vector3(0f, 0f, 0f),
-                new Vector3(0f, 1f, 0f));
-            m_Device.VertexFormat = VertexFormats.Diffuse | VertexFormats.Position;
-            m_Device.RenderState.ZBufferEnable = true;
+            return bitmap;
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (m_Device == null) InitializeDevice();
-            m_Device.Clear(ClearFlags.Target, Color.Black, 1f, 0);
-            m_Device.BeginScene();
-            m_Device.EndScene();
         }
 
         private void ParseSprFile(string fileName, int fileType)
@@ -108,7 +89,7 @@ namespace SPR_Viewer
 
                     while (num > 0)
                     {
-                        if(fileType == 1)
+                        if (fileType == 1)
                         {
                             reader.ReadInt32();
                             header.ItemIDCount = reader.ReadInt32();
@@ -182,7 +163,7 @@ namespace SPR_Viewer
                 }
                 finally
                 {
-                    if (reader != null) ((IDisposable) reader).Dispose();
+                    if (reader != null) ((IDisposable)reader).Dispose();
                 }
 
                 stream.Close();
@@ -221,10 +202,10 @@ namespace SPR_Viewer
 
         private void saveImageFile(string type)
         {
-            if (type == "dds")
-                saveFileDialog1.Filter = "DDS .dds|*.dds";
-            else
+            if (type == "png")
                 saveFileDialog1.Filter = "PNG .png|*.png";
+            else
+                saveFileDialog1.Filter = "BMP .bmp|*.bmp";
 
             try
             {
@@ -236,22 +217,15 @@ namespace SPR_Viewer
                     var fileName = saveFileDialog1.FileName;
                     var data = new SprFileData();
                     data = SprList[int.Parse(treeView1.SelectedNode.Name)];
-                    var surface = m_Device.GetBackBuffer(0, 0, BackBufferType.Mono);
-                    surface.Device.CreateOffscreenPlainSurface((short) data.Width, (short) data.Height,
-                        ColorFomat3D3[data.ColorType], Pool.Default);
-                    var srcTexture = new Texture(surface.Device, (short) data.Width, (short) data.Height, 1, Usage.None,
-                        ColorFomat3D3[data.ColorType], Pool.Managed);
-                    var stream = srcTexture.LockRectangle(0, LockFlags.None);
-                    if (stream.CanWrite) stream.Write(data.ImageData, 0, data.ImageData.Length);
-                    srcTexture.UnlockRectangle(0);
-                    stream.Dispose();
 
-                    if (type == "dds")
-                        TextureLoader.Save(fileName, ImageFileFormat.Dds, srcTexture);
+                    Bitmap bitmapPreview = CreateBitmap((short)data.Width, (short)data.Height, data.ImageData, ColorPixel[data.ColorType]);
+
+                    if (type == "png")
+                        bitmapPreview.Save(fileName, ImageFormat.Png);
                     else
-                        TextureLoader.Save(fileName, ImageFileFormat.Png, srcTexture);
+                        bitmapPreview.Save(fileName, ImageFormat.Bmp);
 
-                    srcTexture.Dispose();
+                    bitmapPreview.Dispose();
                 }
             }
             catch (Exception ex)
@@ -277,7 +251,6 @@ namespace SPR_Viewer
             }
         }
 
-
         private void buttonAuto_Click(object sender, EventArgs e)
         {
             var dialog = new FolderBrowserDialog();
@@ -301,7 +274,7 @@ namespace SPR_Viewer
             {
                 Process.Start(savingDirectory);
             }
-           
+
             foreach (var info2 in info.GetFiles("*.spr"))
             {
                 var flag = true;
@@ -315,37 +288,19 @@ namespace SPR_Viewer
                     Directory.CreateDirectory(savingDirectory + info2.Name);
                     for (var i = 0; i < treeView1.Nodes[0].Nodes.Count; i++)
                     {
-                        treeView1.SelectedNode = treeView1.Nodes[0].Nodes[i];
-                        treeView1.Select();
-
                         var data = new SprFileData();
                         data = SprList[int.Parse(treeView1.SelectedNode.Name)];
-                        var surface = m_Device.GetBackBuffer(0, 0, BackBufferType.Mono);
-                        surface.Device.CreateOffscreenPlainSurface((short) data.Width, (short) data.Height,
-                            ColorFomat3D3[data.ColorType], Pool.Default);
-                        var srcTexture = new Texture(surface.Device, (short) data.Width, (short) data.Height, 1,
-                            Usage.None, ColorFomat3D3[data.ColorType], Pool.Managed);
-                        var stream = srcTexture.LockRectangle(0, LockFlags.None);
-                        if (stream.CanWrite) stream.Write(data.ImageData, 0, data.ImageData.Length);
-                        srcTexture.UnlockRectangle(0);
 
-                        surface.Dispose();
-                        stream.Dispose();
+                        Bitmap bitmapPreview = CreateBitmap((short)data.Width, (short)data.Height, data.ImageData, ColorPixel[data.ColorType]);
 
-                        if (radioButtonDds.Checked)
-                            TextureLoader.Save(
-                                savingDirectory + info2.Name + @"\" + treeView1.SelectedNode.Name +
-                                ".dds",
-                                ImageFileFormat.Dds, srcTexture);
+                        if (radioButtonPng.Checked)
+                            bitmapPreview.Save(savingDirectory + info2.Name + @"\" + treeView1.SelectedNode.Name +
+                                ".png", ImageFormat.Png);
                         else
-                            TextureLoader.Save(
-                                savingDirectory + info2.Name + @"\" + treeView1.SelectedNode.Name +
-                                ".png",
-                                ImageFileFormat.Png, srcTexture);
+                            bitmapPreview.Save(savingDirectory + info2.Name + @"\" + treeView1.SelectedNode.Name +
+                                ".bmp", ImageFormat.Bmp);
 
-
-                        srcTexture.Dispose();
-
+                        bitmapPreview.Dispose();
                         GC.Collect();
                         GC.WaitForPendingFinalizers();
                     }
@@ -360,14 +315,15 @@ namespace SPR_Viewer
 
         private void buttonSaveImage_Click(object sender, EventArgs e)
         {
-            if (radioButtonDds.Checked)
-                saveImageFile("dds");
-            else
+            if (radioButtonPng.Checked)
                 saveImageFile("png");
+            else
+                saveImageFile("bmp");
         }
 
         private void buttonCopyByte_Click(object sender, EventArgs e)
         {
+            //TODO: transparency not supported in Clipboard
             if (pictureBox1.Image != null) Clipboard.SetImage(pictureBox1.Image);
         }
 
@@ -379,7 +335,7 @@ namespace SPR_Viewer
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if ((string) e.Node.Tag == "1")
+            if ((string)e.Node.Tag == "1")
             {
                 var data = new SprFileData();
                 data = SprList[int.Parse(e.Node.Name)];
@@ -394,12 +350,14 @@ namespace SPR_Viewer
                                 Enum.GetName(typeof(D3DIMAGE_FILEFORMAT), data.m_FileType);
                 textBox10.Text = data.SearchColor[0].ToString("X2") + data.SearchColor[1].ToString("X2") +
                                  data.SearchColor[2].ToString("X2");
-                textBox11.Text = ((short) data.Width).ToString();
-                textBox12.Text = ((short) data.Height).ToString();
+                textBox11.Text = ((short)data.Width).ToString();
+                textBox12.Text = ((short)data.Height).ToString();
                 textBox13.Text = data.NumPixels.ToString("X");
                 label12.Text = "Byte Count: " + data.ImageData.Length.ToString("X");
                 label13.Text = "Data Offset: " + data.DataOffset.ToString("X");
-                CreateBitmap((short) data.Width, (short) data.Height, data.ImageData, ColorPixel[data.ColorType]);
+                Bitmap bitmapPreview = CreateBitmap((short)data.Width, (short)data.Height, data.ImageData, ColorPixel[data.ColorType]);
+
+                pictureBox1.Image = bitmapPreview;
             }
         }
 
@@ -426,5 +384,68 @@ namespace SPR_Viewer
                 this.ParseSprFile(fileName, 1);
             }
         }
+    }
+
+    // DirectX port
+    public enum Format
+    {
+        D24SingleS8 = 83,
+        D32SingleLockable = 82,
+        D24X4S4 = 79,
+        D24X8 = 77,
+        L16 = 81,
+        D16 = 80,
+        D24S8 = 75,
+        D15S1 = 73,
+        D32 = 71,
+        D16Lockable = 70,
+        G8R8G8B8 = 1111970375,
+        R8G8B8G8 = 1195525970,
+        CxV8U8 = 117,
+        A32B32G32R32F = 116,
+        G32R32F = 115,
+        R32F = 114,
+        A16B16G16R16F = 113,
+        G16R16F = 112,
+        R16F = 111,
+        Multi2Argb8 = 827606349,
+        Q16W16V16U16 = 110,
+        VertexData = 100,
+        Dxt5 = 894720068,
+        Dxt4 = 877942852,
+        Dxt3 = 861165636,
+        Dxt2 = 844388420,
+        Dxt1 = 827611204,
+        Yuy2 = 844715353,
+        Uyvy = 1498831189,
+        A2W10V10U10 = 67,
+        V16U16 = 64,
+        Q8W8V8U8 = 63,
+        X8L8V8U8 = 62,
+        L6V5U5 = 61,
+        V8U8 = 60,
+        A4L4 = 52,
+        A8L8 = 51,
+        L8 = 50,
+        P8 = 41,
+        A8P8 = 40,
+        A16B16G16R16 = 36,
+        A2R10G10B10 = 35,
+        G16R16 = 34,
+        X8B8G8R8 = 33,
+        A8B8G8R8 = 32,
+        A2B10G10R10 = 31,
+        X4R4G4B4 = 30,
+        A8R3G3B2 = 29,
+        A8 = 28,
+        R3G3B2 = 27,
+        A4R4G4B4 = 26,
+        A1R5G5B5 = 25,
+        X1R5G5B5 = 24,
+        R5G6B5 = 23,
+        X8R8G8B8 = 22,
+        A8R8G8B8 = 21,
+        R8G8B8 = 20,
+        Unknown = 0
     }
 }

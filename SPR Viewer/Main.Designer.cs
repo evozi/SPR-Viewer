@@ -1,4 +1,6 @@
-﻿namespace SPR_Viewer
+﻿using System.Drawing;
+
+namespace SPR_Viewer
 {
     partial class Main
     {
@@ -66,7 +68,7 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.groupBoxSave = new System.Windows.Forms.GroupBox();
             this.radioButtonPng = new System.Windows.Forms.RadioButton();
-            this.radioButtonDds = new System.Windows.Forms.RadioButton();
+            this.radioButtonBmp = new System.Windows.Forms.RadioButton();
             this.groupBoxOpen = new System.Windows.Forms.GroupBox();
             this.buttonOpenCsp = new System.Windows.Forms.Button();
             this.labelPath = new System.Windows.Forms.Label();
@@ -256,6 +258,7 @@
             // 
             // pictureBox1
             // 
+            this.pictureBox1.BackColor = Color.Transparent;
             this.pictureBox1.Location = new System.Drawing.Point(694, 15);
             this.pictureBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pictureBox1.Name = "pictureBox1";
@@ -395,7 +398,7 @@
             // groupBoxSave
             // 
             this.groupBoxSave.Controls.Add(this.radioButtonPng);
-            this.groupBoxSave.Controls.Add(this.radioButtonDds);
+            this.groupBoxSave.Controls.Add(this.radioButtonBmp);
             this.groupBoxSave.Controls.Add(this.buttonSaveImage);
             this.groupBoxSave.Controls.Add(this.buttonCopyByte);
             this.groupBoxSave.Controls.Add(this.buttonAuto);
@@ -421,17 +424,17 @@
             this.radioButtonPng.Text = "PNG";
             this.radioButtonPng.UseVisualStyleBackColor = true;
             // 
-            // radioButtonDds
+            // radioButtonBmp
             // 
-            this.radioButtonDds.AutoSize = true;
-            this.radioButtonDds.Location = new System.Drawing.Point(170, 112);
-            this.radioButtonDds.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.radioButtonDds.Name = "radioButtonDds";
-            this.radioButtonDds.Size = new System.Drawing.Size(69, 24);
-            this.radioButtonDds.TabIndex = 76;
-            this.radioButtonDds.TabStop = true;
-            this.radioButtonDds.Text = "DDS";
-            this.radioButtonDds.UseVisualStyleBackColor = true;
+            this.radioButtonBmp.AutoSize = true;
+            this.radioButtonBmp.Location = new System.Drawing.Point(170, 112);
+            this.radioButtonBmp.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.radioButtonBmp.Name = "radioButtonBmp";
+            this.radioButtonBmp.Size = new System.Drawing.Size(68, 24);
+            this.radioButtonBmp.TabIndex = 76;
+            this.radioButtonBmp.TabStop = true;
+            this.radioButtonBmp.Text = "BMP";
+            this.radioButtonBmp.UseVisualStyleBackColor = true;
             // 
             // groupBoxOpen
             // 
@@ -609,7 +612,7 @@
         private System.Windows.Forms.GroupBox groupBoxSave;
         private System.Windows.Forms.GroupBox groupBoxOpen;
         private System.Windows.Forms.RadioButton radioButtonPng;
-        private System.Windows.Forms.RadioButton radioButtonDds;
+        private System.Windows.Forms.RadioButton radioButtonBmp;
         private System.Windows.Forms.Label labelPath;
         private System.Windows.Forms.Label labelName;
         private System.Windows.Forms.LinkLabel linkLabelWebsite;
