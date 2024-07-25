@@ -20,12 +20,15 @@ namespace SPR_Viewer
         private string Sname = string.Empty;
         private readonly List<SprFileData> SprList = new List<SprFileData>();
 
+        public int FILE_TYPE_SPR = 0;
+        public int FILE_TYPE_CSP = 1;
+
         public Main()
         {
             InitializeComponent();
             var node = new TreeNode();
             node.Name = "mainNode";
-            node.Text = "SPR Images";
+            node.Text = "Images";
             treeView1.Nodes.Add(node);
 
             label1.Text = "Index (Hex)";
@@ -72,6 +75,7 @@ namespace SPR_Viewer
 
         private void ParseSprFile(string fileName, int fileType)
         {
+            // fileType: 0 = SPR, 1 = CSP
             var num = 1;
             var header = new SprFileHeader();
             using (var stream = new FileStream(fileName, FileMode.Open))
@@ -79,7 +83,7 @@ namespace SPR_Viewer
                 var reader = new BinaryReader(stream);
                 try
                 {
-                    if (fileType == 1)
+                    if (fileType == FILE_TYPE_CSP)
                     {
                         var count = 0;
                         num = reader.ReadInt32();
@@ -89,7 +93,7 @@ namespace SPR_Viewer
 
                     while (num > 0)
                     {
-                        if (fileType == 1)
+                        if (fileType == FILE_TYPE_CSP)
                         {
                             reader.ReadInt32();
                             header.ItemIDCount = reader.ReadInt32();
@@ -245,7 +249,24 @@ namespace SPR_Viewer
             {
                 var fileName = openFileDialog1.FileName;
                 Sname = openFileDialog1.SafeFileName;
-                ParseSprFile(fileName, 0);
+                ParseSprFile(fileName, FILE_TYPE_SPR);
+
+                treeView1.ExpandAll();
+            }
+        }
+
+        private void buttonOpenCsp_Click(object sender, EventArgs e)
+        {
+            treeView1.Nodes["mainNode"].Nodes.Clear();
+            SprList.Clear();
+            openFileDialog1.Filter = "CSP File .csp|*.csp";
+            openFileDialog1.FileName = "";
+            openFileDialog1.ShowDialog();
+            if (openFileDialog1.FileName != "")
+            {
+                var fileName = openFileDialog1.FileName;
+                Sname = openFileDialog1.SafeFileName;
+                ParseSprFile(fileName, FILE_TYPE_CSP);
 
                 treeView1.ExpandAll();
             }
@@ -254,19 +275,32 @@ namespace SPR_Viewer
         private void buttonAuto_Click(object sender, EventArgs e)
         {
             var dialog = new FolderBrowserDialog();
-            dialog.Description = "Select the folder that contain .spr files";
+            dialog.Description = "Select the folder that contain .spr / .csp files";
             dialog.ShowDialog();
             var selectedPath = dialog.SelectedPath;
 
             if (string.IsNullOrEmpty(selectedPath)) return;
 
-            var info = new DirectoryInfo(selectedPath);
+            var sprDirInfo = new DirectoryInfo(selectedPath);
+            var cspDirInfo = new DirectoryInfo(selectedPath);
             var currentDirectory = Directory.GetCurrentDirectory();
-            var savingDirectory = currentDirectory + @"\SprImages\";
+            var savingDirectory = currentDirectory + @"\ExtractedImages\";
 
-            if (info.GetFiles("*.spr").Length <= 0)
+            FileInfo[] sprFileInfo = sprDirInfo.GetFiles("*.spr");
+            FileInfo[] cspFileInfo = cspDirInfo.GetFiles("*.csp");
+
+            if (sprFileInfo.Length <= 0 && cspFileInfo.Length <= 0)
             {
-                MessageBox.Show("No .spr files found");
+                if (sprFileInfo.Length <= 0)
+                {
+                    MessageBox.Show("No .spr files found");
+                }
+                
+                if (cspFileInfo.Length <= 0)
+                {
+                    MessageBox.Show("No .csp files found");
+                }
+
                 return;
             }
 
@@ -275,29 +309,72 @@ namespace SPR_Viewer
                 Process.Start(savingDirectory);
             }
 
-            foreach (var info2 in info.GetFiles("*.spr"))
+            // SPR
+            foreach (var fileInfo in sprFileInfo)
             {
                 var flag = true;
-                if (info2.Name == "Dialog_Group.spr") flag = false;
-                if (info2.Name == "Dialog_Map.spr") flag = false;
+                if (fileInfo.Name == "Dialog_Group.spr") flag = false;
+                if (fileInfo.Name == "Dialog_Map.spr") flag = false;
                 if (flag)
                 {
-                    Sname = info2.Name;
-                    ParseSprFile(info2.Directory + @"\" + info2.Name, 0);
+                    Sname = fileInfo.Name;
+                    ParseSprFile(fileInfo.Directory + @"\" + fileInfo.Name, FILE_TYPE_SPR);
 
-                    Directory.CreateDirectory(savingDirectory + info2.Name);
+                    Directory.CreateDirectory(savingDirectory + fileInfo.Name);
                     for (var i = 0; i < treeView1.Nodes[0].Nodes.Count; i++)
                     {
+                        treeView1.SelectedNode = treeView1.Nodes[0].Nodes[i];
+                        treeView1.Select();
+
                         var data = new SprFileData();
                         data = SprList[int.Parse(treeView1.SelectedNode.Name)];
 
                         Bitmap bitmapPreview = CreateBitmap((short)data.Width, (short)data.Height, data.ImageData, ColorPixel[data.ColorType]);
 
                         if (radioButtonPng.Checked)
-                            bitmapPreview.Save(savingDirectory + info2.Name + @"\" + treeView1.SelectedNode.Name +
+                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + treeView1.SelectedNode.Name +
                                 ".png", ImageFormat.Png);
                         else
-                            bitmapPreview.Save(savingDirectory + info2.Name + @"\" + treeView1.SelectedNode.Name +
+                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + treeView1.SelectedNode.Name +
+                                ".bmp", ImageFormat.Bmp);
+
+                        bitmapPreview.Dispose();
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                    }
+                }
+
+                treeView1.Nodes["mainNode"].Nodes.Clear();
+                SprList.Clear();
+            }
+
+            // CSP
+            foreach (var fileInfo in cspFileInfo)
+            {
+                var flag = true;
+                if (fileInfo.Name == "Dialog_Group.spr") flag = false;
+                if (fileInfo.Name == "Dialog_Map.spr") flag = false;
+                if (flag)
+                {
+                    Sname = fileInfo.Name;
+                    ParseSprFile(fileInfo.Directory + @"\" + fileInfo.Name, FILE_TYPE_CSP);
+
+                    Directory.CreateDirectory(savingDirectory + fileInfo.Name);
+                    for (var i = 0; i < treeView1.Nodes[0].Nodes.Count; i++)
+                    {
+                        treeView1.SelectedNode = treeView1.Nodes[0].Nodes[i];
+                        treeView1.Select();
+
+                        var data = new SprFileData();
+                        data = SprList[int.Parse(treeView1.SelectedNode.Name)];
+
+                        Bitmap bitmapPreview = CreateBitmap((short)data.Width, (short)data.Height, data.ImageData, ColorPixel[data.ColorType]);
+
+                        if (radioButtonPng.Checked)
+                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + treeView1.SelectedNode.Name +
+                                ".png", ImageFormat.Png);
+                        else
+                            bitmapPreview.Save(savingDirectory + fileInfo.Name + @"\" + treeView1.SelectedNode.Name +
                                 ".bmp", ImageFormat.Bmp);
 
                         bitmapPreview.Dispose();
@@ -369,20 +446,6 @@ namespace SPR_Viewer
         private void linkLabelGithub_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://github.com/evozi/SPR-Viewer");
-        }
-
-        private void buttonOpenCsp_Click(object sender, EventArgs e)
-        {
-            this.treeView1.Nodes["mainNode"].Nodes.Clear();
-            this.SprList.Clear();
-            this.openFileDialog1.Filter = "Spr File .csp|*.csp";
-            this.openFileDialog1.FileName = "";
-            this.openFileDialog1.ShowDialog();
-            if (this.openFileDialog1.FileName != "")
-            {
-                string fileName = this.openFileDialog1.FileName;
-                this.ParseSprFile(fileName, 1);
-            }
         }
     }
 
